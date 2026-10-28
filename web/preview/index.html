@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ombro Launchpad</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky slate header, two-column app (content + live rail), one accent (Monero orange), mono for every number. */
+:root{
+  --bg:#F1F2F4; --surface:#FFFFFF; --surface-2:#E8EAEE; --ink:#151922; --muted:#5A6170; --line:#D8DBE1;
+  --accent:#D9540A; --accent-ink:#FFFFFF; --accent-soft:#FCE6D6;
+  --up:#0F8A57; --up-soft:#DCF2E7; --down:#CC3333; --down-soft:#FAE1E1;
+  --hdr:#FFFFFFEE;
+  --f-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1217; --surface:#161A21; --surface-2:#1E232C; --ink:#ECEEF2; --muted:#98A0AF; --line:#29303B;
+  --accent:#FF7A2E; --accent-ink:#1A0D04; --accent-soft:#3A2314;
+  --up:#3CC98F; --up-soft:#15302A; --down:#F26A6A; --down-soft:#3A1E21;
+  --hdr:#161A21EE; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1217; --surface:#161A21; --surface-2:#1E232C; --ink:#ECEEF2; --muted:#98A0AF; --line:#29303B;
+  --accent:#FF7A2E; --accent-ink:#1A0D04; --accent-soft:#3A2314;
+  --up:#3CC98F; --up-soft:#15302A; --down:#F26A6A; --down-soft:#3A1E21;
+  --hdr:#161A21EE; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.wrap{max-width:1240px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--hdr);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:60px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-family:var(--f-display);font-weight:750;font-size:21px;letter-spacing:-.02em}
+.nav{display:flex;gap:4px;flex:1;min-width:0}
+.nav a{text-decoration:none;padding:7px 11px;border-radius:8px;color:var(--muted);font-weight:500}
+.nav a:hover{color:var(--ink);background:var(--surface-2)}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--surface-2)}
+.top-actions{display:flex;gap:8px;align-items:center}
+@media (max-width:760px){
+  .top .wrap{gap:10px;padding-block:8px}
+  .nav{order:3;flex-basis:100%;overflow-x:auto}
+  .top-actions .hide-sm{display:none}
+}
+.preview-bar{background:var(--accent-soft);color:var(--ink);font-size:13px}
+.preview-bar .wrap{padding-block:7px;display:flex;gap:8px;align-items:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{filter:brightness(1.06);border-color:var(--accent)}
+.btn-block{width:100%;padding:12px 14px;font-size:16px}
+.btn-ghost{background:transparent}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* pills & chips */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.holders{background:var(--accent-soft);color:var(--ink)}
+.pill.fund{background:var(--up-soft);color:var(--ink)}
+.stage{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.stage.confirmed{color:var(--up)}
+.stage.ringing{color:var(--accent)}
+.stage.pending{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 12px;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* avatar */
+.ava{flex:none;display:grid;place-items:center;border-radius:10px;font-family:var(--f-display);font-weight:750;color:#fff;overflow:hidden}
+.ava img{width:100%;height:100%;object-fit:cover}
+.quiet .ava{background:var(--surface-2)!important;color:transparent}
+.quiet .ava img{display:none}
+
+/* layout */
+main{padding-block:28px 56px}
+.section{display:grid;gap:14px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-head h2{font-size:22px;font-weight:700}
+.sec-head p{margin:0;color:var(--muted);font-size:14px}
+.home{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:32px;align-items:start}
+.home > *{min-width:0}
+.stack{display:grid;gap:36px}
+@media (max-width:980px){.home{grid-template-columns:minmax(0,1fr)}}
+
+/* hero */
+.hero{display:grid;gap:18px;padding-block:6px 4px}
+.hero h1{font-size:clamp(34px,5vw,58px);font-weight:780;line-height:1.02;max-width:16ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{margin:0;max-width:60ch;color:var(--muted);font-size:17px}
+.hero .cta{display:flex;gap:10px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.stat{padding:14px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 -1px -1px 0}
+.stat dt{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat dd{margin:3px 0 0;font-family:var(--f-mono);font-size:20px;font-weight:500}
+.stat dd small{font-size:12px;color:var(--muted);font-weight:400;display:block}
+
+/* cards */
+.rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,280px);gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.rail > *{scroll-snap-align:start}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.coin{display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);text-decoration:none;transition:border-color .15s,transform .15s}
+.coin:hover{border-color:var(--muted)}
+.coin-top{display:flex;gap:11px;align-items:center;min-width:0}
+.coin-top .ava{width:44px;height:44px;font-size:18px}
+.coin-name{min-width:0}
+.coin-name b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coin-name span{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.coin-mid{display:flex;justify-content:space-between;align-items:end;gap:8px}
+.mc{font-family:var(--f-mono);font-size:18px;font-weight:500}
+.mc small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.spark{width:96px;height:30px;flex:none}
+.coin-foot{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.bar{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+
+/* list rows */
+.rows{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);text-decoration:none}
+.row:first-child{border-top:0}
+.row:hover{background:var(--surface-2)}
+.row .ava{width:36px;height:36px;font-size:15px}
+.row .r-main{min-width:0}
+.row .r-main b{font-weight:600}
+.row .r-end{text-align:right;font-family:var(--f-mono);font-size:14px}
+.prog{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:5px}
+.prog .num{font-size:12px;color:var(--muted)}
+
+/* side feed */
+.aside{display:grid;gap:28px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+@media (max-width:980px){.aside{position:static}}
+.feed{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.feed li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid var(--line);font-size:14px}
+.feed li:first-child{border-top:0}
+.side{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;text-align:center;padding:2px 0;border-radius:5px}
+.side.buy{background:var(--up-soft);color:var(--up)}
+.side.sell{background:var(--down-soft);color:var(--down)}
+.feed .amt{font-family:var(--f-mono);text-align:right}
+.feed .amt small{display:block;color:var(--muted);font-size:11px}
+.feed a{text-decoration:none;font-weight:600}
+@keyframes slide{from{background:var(--accent-soft)}to{background:transparent}}
+.feed li.new{animation:slide 1.6s ease-out}
+@media (prefers-reduced-motion: reduce){.feed li.new{animation:none}.coin{transition:none}}
+
+/* explore controls */
+.controls{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+select.sel{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 10px}
+
+/* coin page */
+.crumb{display:inline-flex;gap:6px;color:var(--muted);text-decoration:none;font-size:14px;margin-bottom:14px}
+.coin-page{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:28px;align-items:start}
+.coin-page > *{min-width:0}
+@media (max-width:980px){.coin-page{grid-template-columns:minmax(0,1fr)}}
+.ch{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ch .ava{width:60px;height:60px;font-size:24px;border-radius:14px}
+.ch h1{font-size:30px;font-weight:750}
+.ch .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.ca{display:inline-flex;gap:6px;align-items:center;font-family:var(--f-mono);font-size:13px;color:var(--muted);background:var(--surface-2);padding:3px 8px;border-radius:7px;border:0;cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:18px}
+.kpi{background:var(--surface);padding:11px 14px}
+.kpi dt{font-size:12px;color:var(--muted)}
+.kpi dd{margin:2px 0 0;font-family:var(--f-mono);font-size:17px}
+.chart-box{margin-top:18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:12px}
+.chart-tools{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tf{display:flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:8px}
+.tf button{border:0;background:transparent;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.tf button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px #0002}
+canvas.chart{display:block;width:100%;height:260px}
+@media (max-width:600px){canvas.chart{height:210px}}
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin-top:22px}
+.tabs button{border:0;background:none;padding:10px 0;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:10px 10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td.n,.tbl th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* trade box */
+.panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px;display:grid;gap:14px}
+.trade{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+@media (max-width:980px){.trade{position:static}}
+.bs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:10px;padding:4px}
+.bs button{border:0;background:transparent;padding:9px;border-radius:8px;font-weight:700;cursor:pointer;color:var(--muted)}
+.bs button[aria-pressed="true"].b{background:var(--up);color:#fff}
+.bs button[aria-pressed="true"].s{background:var(--down);color:#fff}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px;cursor:pointer;font-size:14px;font-weight:500}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+label.lbl{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.inp{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 12px}
+.inp:focus-within{border-color:var(--accent)}
+.inp input{flex:1;min-width:0;border:0;background:transparent;padding:11px 0;font-family:var(--f-mono);font-size:20px;outline:none}
+.inp .unit{font-family:var(--f-mono);color:var(--muted);font-size:14px}
+input.field,textarea.field{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px 12px;outline:none}
+input.field:focus,textarea.field:focus{border-color:var(--accent)}
+textarea.field{resize:vertical;min-height:80px}
+.quick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.quick button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:3px 9px;font-family:var(--f-mono);font-size:13px;cursor:pointer}
+.sum{display:grid;gap:7px;font-size:14px;margin:0}
+.sum div{display:flex;justify-content:space-between;gap:12px}
+.sum dt{color:var(--muted)}
+.sum dd{margin:0;font-family:var(--f-mono);text-align:right}
+.note{font-size:13px;color:var(--muted);margin:0}
+.warn{font-size:13px;background:var(--surface-2);border-radius:8px;padding:9px 11px;margin:0}
+.paybox{display:grid;gap:12px;border:1px dashed var(--accent);border-radius:12px;padding:14px;background:var(--bg)}
+.payrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+canvas.qr{width:112px;height:112px;border-radius:8px;background:#fff;image-rendering:pixelated}
+.addr{font-family:var(--f-mono);font-size:13px;word-break:break-all;background:var(--surface-2);border-radius:8px;padding:8px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.steps li{display:flex;gap:8px;align-items:center;color:var(--muted)}
+.steps li::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);flex:none}
+.steps li.on{color:var(--ink)}
+.steps li.on::before{border-color:var(--accent);background:var(--accent)}
+.split{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px}
+.split i{display:block}
+.legend{display:grid;gap:7px;font-size:14px;margin:0}
+.legend div{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center}
+.legend span.sw{width:12px;height:12px;border-radius:3px}
+.legend dd{margin:0;font-family:var(--f-mono)}
+
+/* launch */
+.launch{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:start}
+.launch > *{min-width:0}
+@media (max-width:980px){.launch{grid-template-columns:minmax(0,1fr)}}
+.form{display:grid;gap:18px}
+.f2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px}
+.count{float:right;font-family:var(--f-mono);font-size:12px}
+.choices{display:grid;gap:8px}
+.choice{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;background:var(--surface)}
+.choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.choice input{accent-color:var(--accent);margin-top:4px}
+.choice b{font-weight:600}
+.choice small{display:block;color:var(--muted);font-size:13px}
+.drop{display:flex;gap:12px;align-items:center;border:1px dashed var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.drop .ava{width:56px;height:56px;font-size:22px;border-radius:12px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{padding:0;font-weight:600;margin-bottom:8px}
+
+/* proofs & docs */
+.page-head{display:grid;gap:8px;margin-bottom:26px}
+.page-head h1{font-size:clamp(30px,4vw,44px);font-weight:760}
+.page-head p{margin:0;color:var(--muted);max-width:62ch}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px}
+.card{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:16px;display:grid;gap:12px;min-width:0}
+.card h3{font-size:17px}
+svg.bars text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.kv{display:grid;gap:10px;margin:0}
+.kv div{display:grid;gap:2px}
+.kv dt{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kv dd{margin:0;font-family:var(--f-mono);font-size:13px;word-break:break-all}
+.docs{display:grid;grid-template-columns:200px minmax(0,1fr);gap:36px;align-items:start}
+.docs > *{min-width:0}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);display:grid;gap:2px;font-size:14px}
+.toc a{text-decoration:none;color:var(--muted);padding:5px 10px;border-radius:7px}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+@media (max-width:860px){.docs{grid-template-columns:minmax(0,1fr)}.toc{position:static;display:flex;flex-wrap:wrap}}
+.prose{max-width:68ch;display:grid;gap:30px}
+.prose section{display:grid;gap:10px;scroll-margin-top:90px}
+.prose h2{font-size:24px;font-weight:700}
+.prose p,.prose li{margin:0;color:var(--ink)}
+.prose ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.prose .muted{color:var(--muted)}
+.stagegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.stagegrid div{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.stagegrid b{display:block;margin:4px 0 2px}
+
+footer{border-top:1px solid var(--line);background:var(--surface)}
+footer .wrap{padding-block:26px;display:grid;gap:14px;font-size:13px;color:var(--muted)}
+footer nav{display:flex;gap:16px;flex-wrap:wrap}
+footer nav a{text-decoration:none;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#coins" aria-label="Ombro home">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" style="fill:var(--accent)"/><circle cx="18.5" cy="10.5" r="9" style="fill:var(--surface)"/></svg>
+      ombro
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#coins" data-nav="coins">Coins</a>
+      <a href="#launch" data-nav="launch">Launch</a>
+      <a href="#proofs" data-nav="proofs">Proofs</a>
+      <a href="#docs" data-nav="docs">Docs</a>
+    </nav>
+    <div class="top-actions">
+      <button class="btn btn-ghost hide-sm" id="quietBtn" aria-pressed="false" title="Hide images and mask addresses">Quiet</button>
+      <a class="btn btn-primary" href="#launch">Launch a coin</a>
+    </div>
+  </div>
+</header>
+<div class="preview-bar"><div class="wrap"><b>Design preview.</b><span>Sample coins and numbers. Nothing here is live or connected to a wallet.</span></div></div>
+
+<main><div class="wrap" id="app"></div></main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer"><a href="#coins">Coins</a><a href="#launch">Launch</a><a href="#proofs">Proofs</a><a href="#docs">Docs</a><a href="#docs-risks">Risks</a></nav>
+    <p style="margin:0">Independent project. Not affiliated with the Monero Project, the wXMR bridge, or pump.fun. Coins can go to zero. The $OMBRO/wXMR liquidity is shared by every coin and backs none of them. Nothing here is advice.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const XMR_USD = 560, SOL_USD = 101, SUPPLY = 1e9;
+const WXMR_MINT = "WXMRyRZhsa19ety5erZhHg4N3xj3EVN92u94422teJp";
+const WXMR_BRIDGE = "EzBkC8P5wxab9kwrtV5hRdynHAfB5w3UPcPXNgMseVA8";
+
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function fakeAddr(seed,len,first){const r=mulberry(seed);let s=first||"";while(s.length<len)s+=B58[Math.floor(r()*58)];return s}
+
+const COINS = [
+  ["Ombro","OMBRO","confirmed",2840000,1,"official",9320,880],
+  ["Ring Cat","RING","confirmed",412300,1,"holders",2104,96],
+  ["Decoy Dog","DECOY","confirmed",288900,1,"holders",1580,64],
+  ["Tail Emission","TAIL","confirmed",96400,1,"fund",702,22],
+  ["Key Image","KEYIMG","confirmed",71800,1,"holders",611,18],
+  ["Stealth Frog","SFROG","ringing",41200,.88,"holders",433,9.1],
+  ["Bulletproof Bear","BPB","ringing",23500,.61,"holders",290,5.4],
+  ["Piconero","PICO","ringing",18900,.53,"creator",244,4.2],
+  ["View Key","VIEW","ringing",14100,.47,"holders",198,3.1],
+  ["Ring Signature Owl","OWL","ringing",12600,.41,"holders",171,2.6],
+  ["Dandelion","DANDY","ringing",9800,.31,"fund",133,1.9],
+  ["Atomic Swap Shark","SWAP","ringing",8400,.27,"creator",120,1.5],
+  ["Subaddress Sam","SUB","ringing",7300,.22,"holders",97,1.2],
+  ["RandomX Rat","RNDX","pending",4200,.06,"holders",14,.4],
+  ["No KYC Kitty","NOKYC","pending",3600,.03,"creator",9,.2],
+  ["Moneroj","MONEROJ","pending",3100,.01,"holders",6,.1]
+].map((c,i)=>({id:i+1,name:c[0],tk:c[1],stage:c[2],mc:c[3],prog:c[4],pays:c[5],holders:c[6],vol:c[7],
+  age:[44640,3,180,9000,12960,26,860,1440,4320,2100,5760,390,7200,52,18,7][i],
+  hue:(i*47+18)%360, pair: i===7||i===12 ? "OMBRO":"wXMR", ca:fakeAddr(1000+i,44), chg:[.042,.183,-.061,.024,-.112,.311,.087,-.034,.142,.009,-.071,.226,.051,.4,-.12,.08][i]}));
+const byId = id => COINS.find(c=>c.id===id);
+
+const S = {quiet:false, filter:"all", sort:"recent", trades:[], timers:[], tf:"5m", tab:"trades",
+  trade:{side:"buy", src:"sol", amt:"0.25", recv:"", paying:false, t0:0},
+  launch:{name:"",tk:"",desc:"",img:"",payee:"me",payeeAddr:"",pair:"wXMR",from:"sol",first:false,firstAmt:"0.25",fixed:"0.25",review:false}};
+try{S.quiet = localStorage.getItem("ombro-quiet")==="1"}catch(e){}
+
+/* formatting */
+function usd(n){if(n>=1e6)return "$"+(n/1e6).toFixed(2)+"M";if(n>=1e3)return "$"+(n/1e3).toFixed(1)+"K";if(n>=1)return "$"+n.toFixed(2);return "$"+n.toFixed(3)}
+function xmr(n,d){d=d==null?(n>=100?1:n>=1?2:4):d;return n.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d})}
+function big(n){if(n>=1e9)return (n/1e9).toFixed(2)+"B";if(n>=1e6)return (n/1e6).toFixed(2)+"M";if(n>=1e3)return (n/1e3).toFixed(1)+"K";return String(Math.round(n))}
+function age(m){if(m<60)return m+"m";if(m<1440)return Math.round(m/60)+"h";return Math.round(m/1440)+"d"}
+function tiny(x){ // 0.0₇736 style
+  if(x>=0.001) return x.toFixed(6);
+  const s=x.toExponential(2); const e=-parseInt(s.split("e")[1],10); const digits=s.split("e")[0].replace(".","").slice(0,3);
+  return "0.0<sub>"+(e-1)+"</sub>"+digits;
+}
+const price = c => c.mc/XMR_USD/SUPPLY;
+function esc(s){return String(s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function mask(a,show){if(S.quiet)return "••••…••••";return show?a:a.slice(0,4)+"…"+a.slice(-4)}
+function ava(c,size){const bg="hsl("+c.hue+" 55% 42%)";return '<span class="ava" style="background:'+bg+(size?';width:'+size+'px;height:'+size+'px':'')+'" aria-hidden="true">'+esc(c.tk[0])+'</span>'}
+function payPill(c){if(c.pays==="holders")return '<span class="pill holders">Pays holders</span>';if(c.pays==="fund")return '<span class="pill fund">Funds Monero</span>';if(c.pays==="official")return '<span class="pill">Official</span>';return ""}
+const STAGE = {pending:"Pending",ringing:"On the curve",confirmed:"Graduated"};
+function spark(c){const r=mulberry(c.id*99);let v=50,pts=[];for(let i=0;i<24;i++){v+= (r()-.5+c.chg*.25)*9;v=Math.max(4,Math.min(26*3,v));pts.push(v)}
+  const mn=Math.min(...pts),mx=Math.max(...pts);const p=pts.map((y,i)=>(i*100/23).toFixed(1)+","+(27-(y-mn)/(mx-mn||1)*24).toFixed(1)).join(" ");
+  return '<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+p+'" style="fill:none;stroke:var('+(c.chg>=0?"--up":"--down")+');stroke-width:1.6;vector-effect:non-scaling-stroke"/></svg>'}
+
+/* coin card */
+function card(c){
+  return '<a class="coin" href="#coin-'+c.id+'">'+
+    '<div class="coin-top">'+ava(c)+'<div class="coin-name"><b>'+esc(c.name)+'</b><span>$'+esc(c.tk)+' · '+c.pair+'</span></div></div>'+
+    '<div class="coin-mid"><div class="mc">'+usd(c.mc)+'<small>'+xmr(c.mc/XMR_USD)+' XMR</small></div>'+spark(c)+'</div>'+
+    (c.stage!=="confirmed"?'<div class="prog"><div class="bar"><i style="width:'+Math.max(2,c.prog*100)+'%"></i></div><span class="num">'+(c.prog*100).toFixed(0)+'%</span></div>':'')+
+    '<div class="coin-foot"><span class="stage '+c.stage+'">'+STAGE[c.stage]+'</span><span class="chips">'+payPill(c)+'<span class="pill">'+age(c.age)+'</span></span></div></a>';
+}
+
+/* live trades */
+function seedTrades(){const r=mulberry(7);for(let i=0;i<10;i++)S.trades.push(mkTrade(r,i*9))}
+function mkTrade(r,ago){const pool=COINS.filter(c=>c.stage!=="pending"||r()>.6);const c=pool[Math.floor(r()*pool.length)];const amt=+(Math.pow(r(),2.2)*1.6+0.004).toFixed(4);
+  return {c:c.id,side:r()>.42?"buy":"sell",amt,ago:ago||0,key:Math.random()}}
+function feedHTML(list,fresh){return list.map((t,i)=>{const c=byId(t.c);return '<li class="'+(fresh&&i===0?"new":"")+'"><span class="side '+t.side+'">'+t.side+'</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="#coin-'+c.id+'">$'+esc(c.tk)+'</a> <span class="muted">'+(t.ago?t.ago+"s":"now")+'</span></span><span class="amt">'+xmr(t.amt,4)+' XMR<small>'+usd(t.amt*XMR_USD)+'</small></span></li>'}).join("")}
+
+/* views */
+function vCoins(){
+  const conf=COINS.filter(c=>c.stage==="confirmed"&&c.pays!=="official").sort((a,b)=>b.mc-a.mc);
+  const near=COINS.filter(c=>c.stage==="ringing").sort((a,b)=>b.prog-a.prog).slice(0,5);
+  const off=byId(1);
+  return '<div class="home"><div class="stack">'+
+  '<section class="hero"><h1>Launch and trade coins with <em>Monero</em>.</h1>'+
+  '<p>Every coin here is a pump.fun coin paired with wXMR. Pay from your Monero wallet and get paid back to it. Holder rewards are paid in XMR, and part of every trade buys and burns $OMBRO.</p>'+
+  '<div class="cta"><a class="btn btn-primary" href="#launch">Launch a coin</a><a class="btn" href="#docs">How it works</a>'+
+  '<button class="ca" data-copy="'+off.ca+'" title="Copy the official $OMBRO address">Official $OMBRO '+mask(off.ca)+' <span aria-hidden="true">⧉</span></button></div></section>'+
+  '<dl class="stats">'+
+   '<div class="stat"><dt>Coins launched</dt><dd>128</dd></div>'+
+   '<div class="stat"><dt>Traded</dt><dd>$4.12M</dd></div>'+
+   '<div class="stat"><dt>Paid to holders</dt><dd>31.40 XMR<small>≈ '+usd(31.4*XMR_USD)+'</small></dd></div>'+
+   '<div class="stat"><dt>Into liquidity</dt><dd>22.90 XMR<small>≈ '+usd(22.9*XMR_USD)+'</small></dd></div>'+
+   '<div class="stat"><dt>$OMBRO burned</dt><dd>61.3M</dd></div>'+
+  '</dl>'+
+  '<section class="section"><div class="sec-head"><h2>Graduated</h2><p>Finished their curve and moved into their own wXMR pool.</p></div><div class="rail">'+conf.map(card).join("")+'</div></section>'+
+  '<section class="section"><div class="sec-head"><h2>Closest to graduating</h2><p>Furthest along the bonding curve.</p></div><div class="rows">'+
+   near.map(c=>'<a class="row" href="#coin-'+c.id+'">'+ava(c)+'<div class="r-main"><b>'+esc(c.name)+'</b> <span class="muted mono">$'+esc(c.tk)+'</span><div class="prog"><div class="bar"><i style="width:'+c.prog*100+'%"></i></div><span class="num">'+(c.prog*100).toFixed(1)+'%</span></div></div><div class="r-end">'+usd(c.mc)+'<div class="muted" style="font-size:12px">'+xmr(c.mc/XMR_USD)+' XMR</div></div></a>').join("")+
+  '</div></section>'+
+  '<section class="section" id="explore"><div class="sec-head"><h2>Explore</h2></div>'+
+   '<div class="controls"><div class="chips" role="group" aria-label="Filter">'+
+    [["all","All"],["holders","Pays holders"],["fund","Funds Monero"],["ringing","On the curve"],["confirmed","Graduated"],["pending","New"]].map(f=>'<button class="chip" data-filter="'+f[0]+'" aria-pressed="'+(S.filter===f[0])+'">'+f[1]+'</button>').join("")+
+   '</div><label class="muted" style="font-size:14px">Sort <select class="sel" id="sortSel">'+
+    [["recent","Recent trades"],["new","Newest"],["mc","Market cap"],["vol","24h volume"],["prog","Closest to graduating"]].map(o=>'<option value="'+o[0]+'"'+(S.sort===o[0]?" selected":"")+'>'+o[1]+'</option>').join("")+
+   '</select></label></div><div class="grid" id="exploreGrid">'+exploreGrid()+'</div></section>'+
+  '</div>'+
+  '<aside class="aside"><section class="section"><div class="sec-head"><h2>Latest trades</h2><p>XMR</p></div><ul class="feed" id="feed">'+feedHTML(S.trades.slice(0,10))+'</ul></section>'+
+  '<section class="section"><div class="sec-head"><h2>Just launched</h2></div><div class="rows">'+
+   COINS.slice().sort((a,b)=>a.age-b.age).slice(0,5).map(c=>'<a class="row" href="#coin-'+c.id+'">'+ava(c)+'<div class="r-main"><b>'+esc(c.name)+'</b><div class="muted mono" style="font-size:12px">$'+esc(c.tk)+' · '+mask(c.ca)+'</div></div><div class="r-end muted">'+age(c.age)+'</div></a>').join("")+
+  '</div></section></aside></div>';
+}
+function exploreGrid(){
+  let l=COINS.slice();
+  if(S.filter==="holders"||S.filter==="fund")l=l.filter(c=>c.pays===S.filter);
+  else if(S.filter!=="all")l=l.filter(c=>c.stage===S.filter);
+  const k={recent:(a,b)=>b.vol-a.vol,new:(a,b)=>a.age-b.age,mc:(a,b)=>b.mc-a.mc,vol:(a,b)=>b.vol-a.vol,prog:(a,b)=>(b.stage==="ringing")-(a.stage==="ringing")||b.prog-a.prog}[S.sort];
+  l.sort(k);
+  return l.length?l.map(card).join(""):'<p class="muted">No coins match this filter yet.</p>';
+}
+
+function vCoin(c){
+  const p=price(c);
+  const holders=(()=>{const r=mulberry(c.id*31);let rows=[["Bonding curve",c.stage==="confirmed"?0:62-c.prog*55]];let left=100-rows[0][1];for(let i=0;i<7;i++){const v=+(left*(.12+r()*.2)).toFixed(2);left-=v;rows.push([fakeAddr(c.id*50+i,44),v])}return rows})();
+  return '<a class="crumb" href="#coins">← All coins</a><div class="coin-page"><div>'+
+  '<div class="ch">'+ava(c)+'<div><h1>'+esc(c.name)+'</h1><div class="meta"><span class="mono muted">$'+esc(c.tk)+'</span><span class="stage '+c.stage+'">'+STAGE[c.stage]+'</span>'+payPill(c)+
+  '<button class="ca" data-copy="'+c.ca+'">'+mask(c.ca)+' <span aria-hidden="true">⧉</span></button></div></div></div>'+
+  '<dl class="kpis">'+
+   '<div class="kpi"><dt>Market cap</dt><dd>'+usd(c.mc)+'</dd></div>'+
+   '<div class="kpi"><dt>Price</dt><dd>'+tiny(p)+' XMR</dd></div>'+
+   '<div class="kpi"><dt>24h volume</dt><dd>'+xmr(c.vol)+' XMR</dd></div>'+
+   '<div class="kpi"><dt>Holders</dt><dd>'+c.holders.toLocaleString()+'</dd></div>'+
+   '<div class="kpi"><dt>'+(c.stage==="confirmed"?"Pool":"Curve")+'</dt><dd>'+(c.stage==="confirmed"?c.pair+" pool":(c.prog*100).toFixed(1)+"%")+'</dd></div>'+
+  '</dl>'+
+  '<div class="chart-box"><div class="chart-tools"><span class="mono" style="font-size:14px"><span class="'+(c.chg>=0?"up":"down")+'">'+(c.chg>=0?"+":"")+(c.chg*100).toFixed(1)+'%</span> <span class="muted">24h</span></span>'+
+   '<div class="tf" role="group" aria-label="Time frame">'+["1m","5m","1h","1d"].map(t=>'<button data-tf="'+t+'" aria-pressed="'+(S.tf===t)+'">'+t+'</button>').join("")+'</div></div>'+
+   '<canvas class="chart" id="chart" aria-label="Price chart for $'+esc(c.tk)+', sample data" role="img"></canvas></div>'+
+  '<div class="tabs" role="tablist"><button role="tab" data-tab="trades" aria-selected="'+(S.tab==="trades")+'">Trades</button><button role="tab" data-tab="holders" aria-selected="'+(S.tab==="holders")+'">Holders</button><button role="tab" data-tab="fees" aria-selected="'+(S.tab==="fees")+'">Where the 2% goes</button></div>'+
+  '<div id="tabBody">'+tabBody(c,holders)+'</div>'+
+  '</div><div class="trade" id="tradeBox">'+tradeBox(c)+'</div></div>';
+}
+function tabBody(c,holders){
+  if(S.tab==="holders"){
+    return '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Holder</th><th class="n">Share</th></tr></thead><tbody>'+
+      holders.map(h=>'<tr><td class="mono">'+(h[0]==="Bonding curve"?'<span class="pill">Bonding curve</span>':mask(h[0]))+'</td><td class="n">'+h[1].toFixed(2)+'%</td></tr>').join("")+'</tbody></table></div>';
+  }
+  if(S.tab==="fees") return feeSplit(c);
+  const r=mulberry(c.id*13);const rows=[];for(let i=0;i<9;i++){const side=r()>.4?"buy":"sell";const a=+(Math.pow(r(),2)*1.2+.006).toFixed(4);rows.push([side,a,Math.round(5+i*37+r()*30),fakeAddr(c.id*900+i,44)])}
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Side</th><th class="n">XMR</th><th class="n">Tokens</th><th>Trader</th><th class="n">When</th></tr></thead><tbody>'+
+    rows.map(t=>'<tr><td><span class="side '+t[0]+'" style="padding:2px 8px">'+t[0]+'</span></td><td class="n">'+xmr(t[1],4)+'</td><td class="n">'+big(t[1]*.98/price(c))+'</td><td class="mono">'+mask(t[3])+'</td><td class="n muted">'+(t[2]<60?t[2]+"s":Math.round(t[2]/60)+"m")+'</td></tr>').join("")+'</tbody></table></div>';
+}
+function feeSplit(c){
+  const dest=c.pays==="holders"?"Holders, in XMR":c.pays==="fund"?"Monero General Fund":c.pays==="official"?"Ombro treasury":"The creator";
+  const parts=[["Liquidity: $OMBRO/wXMR, LP burned",.5,"var(--accent)"],["Buy and burn $OMBRO",.5,"var(--ink)"],["Ombro",.2,"var(--muted)"],[dest,.8,"var(--up)"]];
+  return '<div class="card" style="margin-top:16px"><h3>Every trade pays a 2% creator fee</h3><p class="note">pump.fun pays it to Ombro\'s program, which splits it on chain. pump.fun takes its own protocol fee on top.</p>'+
+  '<div class="split" role="img" aria-label="Fee split">'+parts.map(p=>'<i style="flex:'+p[1]+';background:'+p[2]+'"></i>').join("")+'</div>'+
+  '<dl class="legend">'+parts.map(p=>'<div><span class="sw" style="background:'+p[2]+'"></span><dt>'+p[0]+'</dt><dd>'+p[1].toFixed(2)+'%</dd></div>').join("")+'</dl></div>';
+}
+
+function tradeBox(c){
+  const T=S.trade, isBuy=T.side==="buy", mon=T.src==="xmr";
+  const a=parseFloat(T.amt)||0, p=price(c);
+  let body="";
+  if(isBuy){
+    const impact=Math.min(.35,a*XMR_USD/(c.mc*.18));
+    const toks=a*.98/p*(1-impact);
+    const bridge=mon?a*.001:0;
+    const tooSmall=mon&&a<0.1;
+    body='<div><label class="lbl" for="amt">Amount</label><div class="inp"><input id="amt" inputmode="decimal" value="'+esc(T.amt)+'" aria-describedby="amtHelp"><span class="unit">XMR</span></div>'+
+      '<div class="quick">'+["0.1","0.25","0.5","1"].map(v=>'<button data-amt="'+v+'">'+v+'</button>').join("")+'</div></div>'+
+      '<dl class="sum"><div><dt>You get about</dt><dd>'+(a?big(toks):"—")+' $'+esc(c.tk)+'</dd></div>'+
+      '<div><dt>Price impact</dt><dd>'+(a?(impact*100).toFixed(2)+"%":"—")+'</dd></div>'+
+      '<div><dt>Creator fee</dt><dd>2%, in the price</dd></div>'+
+      (mon?'<div><dt>Bridge fee (0.1%)</dt><dd>'+xmr(bridge,5)+' XMR</dd></div><div><dt>Arrives</dt><dd>~20 min</dd></div>':'<div><dt>Arrives</dt><dd>seconds</dd></div>')+
+      (!mon?'<div><dt>Pay with SOL instead</dt><dd>≈ '+(a*XMR_USD/SOL_USD).toFixed(3)+' SOL</dd></div>':'')+'</dl>'+
+      (tooSmall?'<p class="warn" id="amtHelp">Monero payments need at least 0.1 XMR. That is the bridge\'s minimum deposit.</p>':
+        mon?'<p class="note" id="amtHelp">Monero needs 10 confirmations, about 20 minutes, before the buy runs. Your coins wait in your Ombro account.</p>':'<p class="note" id="amtHelp">Paid in wXMR from Phantom or Solflare. Swaps from SOL through Jupiter if you hold no wXMR.</p>')+
+      (T.paying&&mon&&!tooSmall?payBox(a):'<button class="btn btn-primary btn-block" data-act="buy"'+(tooSmall||!a?" disabled":"")+'>'+(mon?"Get payment details":"Buy $"+esc(c.tk))+'</button>');
+  }else{
+    const sellTok=a*1e6;
+    const out=sellTok*p*.98;
+    body='<div><label class="lbl" for="amt">Sell</label><div class="inp"><input id="amt" inputmode="decimal" value="'+esc(T.amt)+'"><span class="unit">M $'+esc(c.tk)+'</span></div>'+
+      '<div class="quick">'+["25%","50%","100%"].map((v,i)=>'<button data-amt="'+[.6,1.2,2.4][i]+'">'+v+'</button>').join("")+'</div></div>'+
+      '<dl class="sum"><div><dt>You get at least</dt><dd>'+(a?xmr(out*.99,5):"—")+' XMR</dd></div><div><dt>Creator fee</dt><dd>2%, in the price</dd></div>'+
+      (mon?'<div><dt>Bridge fee (0.1%)</dt><dd>'+xmr(out*.001,6)+' XMR</dd></div><div><dt>Arrives</dt><dd>a few minutes</dd></div>':'<div><dt>Arrives</dt><dd>seconds</dd></div>')+'</dl>'+
+      (mon?'<div><label class="lbl" for="recv">Your Monero address</label><input class="field mono" id="recv" placeholder="4… or 8…" value="'+esc(T.recv)+'" autocomplete="off" spellcheck="false"></div><p class="note">Payouts to a Monero address are private on Monero. The sale itself is public on Solana. Copy the address from your wallet\'s Receive screen and check every character.</p>':'')+
+      '<button class="btn btn-block" style="background:var(--down);border-color:var(--down);color:#fff" data-act="sell"'+(!a?" disabled":"")+'>Sell $'+esc(c.tk)+'</button>';
+  }
+  return '<div class="panel"><div class="bs" role="group" aria-label="Buy or sell"><button class="b" data-side="buy" aria-pressed="'+isBuy+'">Buy</button><button class="s" data-side="sell" aria-pressed="'+!isBuy+'">Sell</button></div>'+
+    '<div><span class="lbl">'+(isBuy?"Pay from":"Get paid to")+'</span><div class="seg" role="group"><button data-src="sol" aria-pressed="'+!mon+'">Solana wallet</button><button data-src="xmr" aria-pressed="'+mon+'">Monero wallet</button></div></div>'+
+    body+'<p class="note" id="tradeMsg" role="status"></p></div>'+
+    (S.trade.side==="buy"?'':'')+
+    '<div class="card" style="margin-top:14px"><h3>About $'+esc(c.tk)+'</h3><p class="note">'+aboutLine(c)+'</p><dl class="kv"><div><dt>Paired with</dt><dd>'+(c.pair==="wXMR"?"wXMR · "+mask(WXMR_MINT):"$OMBRO, routed through the $OMBRO/wXMR pool")+'</dd></div><div><dt>Launched</dt><dd>'+age(c.age)+' ago</dd></div></dl></div>';
+}
+function aboutLine(c){
+  if(c.pays==="holders")return "Its creator gave the 0.80% share to holders. Every wallet holding $20 or more gets paid in XMR, about once an hour. This choice is permanent.";
+  if(c.pays==="fund")return "Its creator's 0.80% share goes to the Monero General Fund, forever. Ombro takes no cut of it.";
+  if(c.pays==="official")return "The launchpad's own coin. 0.50% of every trade on every coin buys and burns it.";
+  return "Its 0.80% share goes to the creator's wallet. Only the current payee can redirect it.";
+}
+function payBox(a){
+  const amt=(a*1.001+0.00003);
+  const addr=fakeAddr(4242,95,"8");
+  const left=Math.max(0,4800-Math.floor((Date.now()-S.trade.t0)/1000));
+  const mm=String(Math.floor(left/60)).padStart(2,"0"), ss=String(left%60).padStart(2,"0");
+  return '<div class="paybox"><div class="payrow"><canvas class="qr" id="qr" width="29" height="29" aria-label="Sample payment code"></canvas><div style="min-width:0;display:grid;gap:6px"><span class="lbl" style="margin:0">Send exactly</span><b class="mono" style="font-size:20px">'+xmr(amt,6)+' XMR</b><button class="btn" data-copy="'+amt.toFixed(6)+'">Copy amount</button></div></div>'+
+   '<div><span class="lbl">To this one-time Monero subaddress</span><div class="addr">'+(S.quiet?mask(addr):addr)+'</div><button class="btn" style="margin-top:8px" data-copy="'+addr+'">Copy address</button></div>'+
+   '<p class="note">Send before <b class="mono" id="cd">'+mm+':'+ss+'</b>. Works from Cake Wallet, Feather, Monerujo or the Monero GUI.</p>'+
+   '<ol class="steps"><li class="on">Payment details ready</li><li>Seen on Monero</li><li>Confirming · 0 of 10</li><li>Bought</li></ol>'+
+   '<p class="warn">Preview only. This subaddress and code are samples. Do not send anything.</p>'+
+   '<button class="btn" data-act="cancelpay">Cancel</button></div>';
+}
+function drawQR(){const cv=document.getElementById("qr");if(!cv)return;const x=cv.getContext("2d"),n=29,r=mulberry(4242);x.fillStyle="#fff";x.fillRect(0,0,n,n);x.fillStyle="#111";
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(r()>.52)x.fillRect(i,j,1,1);
+  [[0,0],[n-7,0],[0,n-7]].forEach(([a,b])=>{x.fillStyle="#fff";x.fillRect(a-1<0?a:a-1,b-1<0?b:b-1,8,8);x.fillStyle="#111";x.fillRect(a,b,7,7);x.fillStyle="#fff";x.fillRect(a+1,b+1,5,5);x.fillStyle="#111";x.fillRect(a+2,b+2,3,3)})}
+
+/* chart */
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function drawChart(c){
+  const cv=document.getElementById("chart");if(!cv)return;
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+  const x=cv.getContext("2d");x.scale(dpr,dpr);x.clearRect(0,0,w,h);
+  const n=Math.max(24,Math.min(70,Math.floor(w/11)));const r=mulberry(c.id*7+S.tf.length*131+S.tf.charCodeAt(1));
+  let v=1,cs=[];for(let i=0;i<n;i++){const o=v;v=o*(1+(r()-.47+c.chg*.02)*.09);const hi=Math.max(o,v)*(1+r()*.03),lo=Math.min(o,v)*(1-r()*.03);cs.push([o,hi,lo,v])}
+  const k=price(c)/v;cs=cs.map(a=>a.map(z=>z*k));
+  const mx=Math.max(...cs.map(a=>a[1])),mn=Math.min(...cs.map(a=>a[2]));const padR=74,padT=10,padB=18,H=h-padT-padB,W=w-padR;
+  const Y=z=>padT+(mx-z)/(mx-mn)*H;
+  x.strokeStyle=css("--line");x.fillStyle=css("--muted");x.font="10px "+css("--f-mono");x.lineWidth=1;
+  for(let g=0;g<=4;g++){const z=mn+(mx-mn)*g/4,yy=Math.round(Y(z))+.5;x.beginPath();x.moveTo(0,yy);x.lineTo(W,yy);x.stroke();
+    const s=z.toExponential(2);x.fillText(s.replace("e-","e−")+" XMR",W+6,yy+3)}
+  const bw=W/n;const up=css("--up"),dn=css("--down");
+  cs.forEach((a,i)=>{const col=a[3]>=a[0]?up:dn;x.strokeStyle=col;x.fillStyle=col;const cx=i*bw+bw/2;
+    x.beginPath();x.moveTo(cx,Y(a[1]));x.lineTo(cx,Y(a[2]));x.stroke();
+    const t=Y(Math.max(a[0],a[3])),b=Y(Math.min(a[0],a[3]));x.fillRect(cx-bw*.32,t,bw*.64,Math.max(1,b-t))});
+  const last=cs[n-1][3],ly=Y(last);x.setLineDash([3,3]);x.strokeStyle=css("--accent");x.beginPath();x.moveTo(0,ly);x.lineTo(W,ly);x.stroke();x.setLineDash([]);
+  x.fillStyle=css("--accent");x.fillRect(W+2,ly-8,padR-4,16);x.fillStyle=css("--accent-ink");x.fillText(last.toExponential(2).replace("e-","e−"),W+6,ly+3);
+  x.fillStyle=css("--muted");x.fillText("Sample data · "+S.tf+" candles",4,h-4);
+}
+
+/* launch */
+function vLaunch(){
+  const L=S.launch;
+  return '<div class="page-head"><h1>Launch a coin</h1><p>Your coin is a real pump.fun coin paired with wXMR. You choose who gets the 0.80% share of every trade, once, when you launch.</p></div>'+
+  '<div class="launch"><form class="form" id="launchForm" novalidate>'+
+   '<div class="f2"><div><label class="lbl" for="lName">Name <span class="count" id="lNameC">0/32 bytes</span></label><input class="field" id="lName" maxlength="40" value="'+esc(L.name)+'" placeholder="Ring Cat"></div>'+
+   '<div><label class="lbl" for="lTk">Ticker</label><input class="field mono" id="lTk" maxlength="10" value="'+esc(L.tk)+'" placeholder="RING" autocapitalize="characters"></div></div>'+
+   '<div><label class="lbl" for="lDesc">Description</label><textarea class="field" id="lDesc" placeholder="One or two lines about the coin.">'+esc(L.desc)+'</textarea></div>'+
+   '<div><span class="lbl">Image</span><label class="drop" for="lImg"><span id="lAva">'+launchAva()+'</span><span><b>Choose an image</b><span class="muted" style="display:block;font-size:13px">PNG, JPEG, WebP or GIF, under 4 MB</span></span></label><input type="file" id="lImg" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>'+
+   '<fieldset><legend>Who gets your 0.80% of every trade</legend><div class="choices">'+
+    [["me","To me","Paid to the wallet that launches the coin."],["wallet","Another wallet","That wallet controls the share from the start."],["xmraddr","A Monero address","Paid out as native XMR. Private on Monero."],["holders","Holders","Every holder with $20 or more, in XMR. Permanent."],["fund","Monero General Fund","Donated to the Monero General Fund. Permanent."]]
+    .map(o=>'<label class="choice"><input type="radio" name="payee" value="'+o[0]+'"'+(L.payee===o[0]?" checked":"")+'><span><b>'+o[1]+'</b><small>'+o[2]+'</small></span></label>').join("")+
+   '</div>'+(L.payee==="wallet"||L.payee==="xmraddr"?'<input class="field mono" id="lPayeeAddr" style="margin-top:8px" placeholder="'+(L.payee==="wallet"?"Solana address":"Monero address (4… or 8…)")+'" value="'+esc(L.payeeAddr)+'" spellcheck="false">':'')+'</fieldset>'+
+   '<fieldset><legend>Pair</legend><div class="seg"><button type="button" data-pair="wXMR" aria-pressed="'+(L.pair==="wXMR")+'">wXMR</button><button type="button" data-pair="OMBRO" aria-pressed="'+(L.pair==="OMBRO")+'">$OMBRO</button></div>'+
+   '<p class="note" style="margin-top:6px">'+(L.pair==="wXMR"?"Trades in wXMR. The most common pair.":"Trades route through the $OMBRO/wXMR pool. You still pay and get paid in XMR.")+'</p></fieldset>'+
+   '<fieldset><legend>Launch from</legend><div class="seg"><button type="button" data-from="sol" aria-pressed="'+(L.from==="sol")+'">Solana wallet</button><button type="button" data-from="xmr" aria-pressed="'+(L.from==="xmr")+'">Monero wallet</button></div>'+
+   (L.from==="xmr"?'<p class="note" style="margin-top:8px">Pay a fixed amount from your Monero wallet into a fresh account made only for this coin, so nothing links the launch to you. Costs come out of it and the rest is your first buy.</p><div class="quick">'+["0.1","0.25","0.5","1"].map(v=>'<button type="button" data-fixed="'+v+'" aria-pressed="'+(L.fixed===v)+'" style="'+(L.fixed===v?"border-color:var(--accent);background:var(--accent-soft)":"")+'">'+v+' XMR</button>').join("")+'</div>':
+    '<label class="choice" style="margin-top:8px"><input type="checkbox" id="lFirst"'+(L.first?" checked":"")+'><span><b>Add a first buy</b><small>Runs in the same transaction as the launch.</small></span></label>'+(L.first?'<div class="inp" style="margin-top:8px"><input id="lFirstAmt" inputmode="decimal" value="'+esc(L.firstAmt)+'" aria-label="First buy amount"><span class="unit">XMR</span></div>':''))+
+   '</fieldset></form>'+
+  '<div class="trade" id="launchSide">'+launchSide()+'</div></div>';
+}
+function launchAva(){const L=S.launch;if(L.img)return '<span class="ava" style="width:56px;height:56px;border-radius:12px"><img src="'+L.img+'" alt=""></span>';return '<span class="ava" style="width:56px;height:56px;border-radius:12px;font-size:22px;background:var(--accent)">'+esc((L.tk||L.name||"?")[0]||"?")+'</span>'}
+function launchSide(){
+  const L=S.launch;const c={id:0,name:L.name||"Your coin",tk:L.tk||"TICKER",hue:20,stage:"pending",mc:2800,prog:0,pays:L.payee==="holders"?"holders":L.payee==="fund"?"fund":"creator",age:0,pair:L.pair,chg:0};
+  const fb=L.from==="xmr"?parseFloat(L.fixed):(L.first?parseFloat(L.firstAmt)||0:0);
+  const costs=L.from==="xmr"?[["Launch fee","≈ "+xmr(0.01*SOL_USD/XMR_USD,4)+" XMR"],["Bridge fee (0.1%)",xmr(fb*.001,5)+" XMR"],["Network and rent","≈ 0.0040 XMR"],["First buy","the rest"]]:[["Launch fee","0.01 SOL"],["First buy",fb?xmr(fb,3)+" XMR":"none"],["Network and rent","≈ 0.02 SOL"]];
+  const ok=L.name&&L.tk.length>=2;
+  return '<div class="panel"><span class="lbl" style="margin:0">Preview</span>'+
+   '<div class="coin" style="pointer-events:none"><div class="coin-top">'+(L.img?'<span class="ava" style="width:44px;height:44px"><img src="'+L.img+'" alt=""></span>':ava(Object.assign({},c,{hue:20})))+'<div class="coin-name"><b>'+esc(c.name)+'</b><span>$'+esc(c.tk)+' · '+c.pair+'</span></div></div>'+
+   '<div class="coin-foot"><span class="stage pending">Pending</span><span class="chips">'+payPill(c)+'</span></div></div>'+
+   '<dl class="sum">'+costs.map(r=>'<div><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>').join("")+'</dl>'+
+   (L.review?'<div class="paybox"><b>Review</b><dl class="sum"><div><dt>Coin</dt><dd>'+esc(c.name)+' · $'+esc(c.tk)+'</dd></div><div><dt>0.80% goes to</dt><dd>'+({me:"You",wallet:"Another wallet",xmraddr:"A Monero address",holders:"Holders (permanent)",fund:"Monero General Fund (permanent)"}[L.payee])+'</dd></div><div><dt>Pair</dt><dd>'+L.pair+'</dd></div></dl><p class="warn">This is a design preview. Launching is not connected yet.</p><button class="btn" data-act="unreview">Edit</button></div>':
+   '<button class="btn btn-primary btn-block" data-act="review"'+(ok?"":" disabled")+'>Review launch</button>'+(ok?'':'<p class="note">Add a name and a ticker of 2 to 10 letters or digits.</p>'))+
+  '</div>';
+}
+
+/* proofs */
+function vProofs(){
+  const r=mulberry(77);const days=[];for(let i=0;i<30;i++){const f=+(1.2+r()*4.8+i*.09).toFixed(2);days.push([f,+(f*.25).toFixed(3)])}
+  const tot=days.reduce((s,d)=>s+d[0],0),lp=days.reduce((s,d)=>s+d[1],0);
+  const W=640,H=200,pl=34,pb=22,mx=Math.ceil(Math.max(...days.map(d=>d[0])));const bw=(W-pl)/30;
+  const y=v=>H-pb-(v/mx)*(H-pb-8);
+  let svg='<svg class="bars" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Daily creator fees over 30 days, with the liquidity share highlighted" style="width:100%;height:auto;display:block">';
+  for(let g=0;g<=mx;g+=2){svg+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(g)+'" y2="'+y(g)+'" style="stroke:var(--line)"/><text x="'+(pl-6)+'" y="'+(y(g)+3)+'" text-anchor="end">'+g+'</text>'}
+  days.forEach((d,i)=>{const X=pl+i*bw+2;svg+='<rect x="'+X+'" y="'+y(d[0])+'" width="'+(bw-4)+'" height="'+(H-pb-y(d[0]))+'" rx="2" style="fill:var(--surface-2);stroke:var(--line)"/><rect x="'+X+'" y="'+y(d[1])+'" width="'+(bw-4)+'" height="'+(H-pb-y(d[1]))+'" rx="2" style="fill:var(--accent)"/>'});
+  [0,10,20,29].forEach(i=>{svg+='<text x="'+(pl+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+(i===29?"today":"−"+(29-i)+"d")+'</text>'});
+  svg+='</svg>';
+  const all=[["Into liquidity ($OMBRO/wXMR, LP burned)",41.05,"var(--accent)"],["Bought and burned $OMBRO",41.05,"var(--ink)"],["Ombro treasury",16.42,"var(--muted)"],["Paid to holders",31.40,"var(--up)"],["Paid to creators",32.10,"color-mix(in srgb,var(--up) 50%,var(--surface-2))"],["Monero General Fund",2.18,"color-mix(in srgb,var(--accent) 45%,var(--surface-2))"]];
+  const sum=all.reduce((s,a)=>s+a[1],0);
+  const runs=[["RING","12:41","0.0612",188],["DECOY","12:07","0.0455",141],["SFROG","11:52","0.0448",97],["KEYIMG","11:20","0.0451",120],["RING","11:39","0.0603",186],["VIEW","10:58","0.0447",64]];
+  return '<div class="page-head"><h1>Every fee, with its signature.</h1><p>Each claim, split, burn, liquidity add and payout is listed here with its transaction. Nothing here is a promise. Every row can be checked on chain.</p></div>'+
+  '<div class="two"><div class="card"><h3>Creator fees, last 30 days</h3><p class="note"><b class="mono" style="color:var(--ink)">'+xmr(tot,2)+' XMR</b> in fees. The orange part of each day went into $OMBRO/wXMR liquidity: <b class="mono" style="color:var(--ink)">'+xmr(lp,2)+' XMR</b>.</p><div class="tbl-wrap">'+svg+'</div></div>'+
+  '<div class="card"><h3>Where the fees went, all time</h3><div class="split" style="height:16px" role="img" aria-label="Fee destinations">'+all.map(a=>'<i style="flex:'+a[1]+';background:'+a[2]+'"></i>').join("")+'</div><dl class="legend">'+all.map(a=>'<div><span class="sw" style="background:'+a[2]+'"></span><dt>'+a[0]+'</dt><dd>'+xmr(a[1],2)+' XMR</dd></div>').join("")+'<div style="border-top:1px solid var(--line);padding-top:7px"><span></span><dt><b>Total</b></dt><dd><b>'+xmr(sum,2)+' XMR</b></dd></div></dl></div></div>'+
+  '<section class="section" style="margin-top:30px"><div class="sec-head"><h2>Holder reward runs</h2><p>Pot paid pro rata to every wallet holding $20 or more. The snapshot hash is committed on chain before any payout.</p></div>'+
+  '<div class="card" style="padding:0"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Coin</th><th>Time (UTC)</th><th class="n">Pot, XMR</th><th class="n">Holders paid</th><th>Snapshot</th></tr></thead><tbody>'+
+   runs.map((r,i)=>'<tr><td><b>$'+r[0]+'</b></td><td class="mono">2026-10-28 '+r[1]+'</td><td class="n">'+r[2]+'</td><td class="n">'+r[3]+'</td><td class="mono muted">'+fakeAddr(300+i,8).toLowerCase()+'…</td></tr>').join("")+'</tbody></table></div></div></section>'+
+  '<section class="section" style="margin-top:30px"><div class="sec-head"><h2>Addresses</h2><p>Check every character. Look-alike addresses copy only the first and last few.</p></div>'+
+  '<div class="card"><dl class="kv"><div><dt>wXMR mint (third party)</dt><dd>'+mask(WXMR_MINT,true)+'</dd></div><div><dt>wXMR bridge program (third party)</dt><dd>'+mask(WXMR_BRIDGE,true)+'</dd></div>'+
+  ["Ombro vault program","Upgrade authority (2-of-3 multisig)","$OMBRO/wXMR pool","Liquidity pot","Treasury","Rewards wallet"].map(k=>'<div><dt>'+k+'</dt><dd class="muted">Published at launch</dd></div>').join("")+'</dl></div></section>';
+}
+
+/* docs */
+function vDocs(){
+  const sec=[["what","What Ombro is"],["stages","Stages"],["fees","Where the 2% goes"],["move","XMR in and out"],["account","Monero wallet accounts"],["keys","Who holds the keys"],["risks","Risks"]];
+  return '<div class="page-head"><h1>How Ombro works</h1><p>Short answers. Figures marked as samples are placeholders until launch.</p></div>'+
+  '<div class="docs"><nav class="toc" aria-label="On this page">'+sec.map(s=>'<a href="#docs-'+s[0]+'">'+s[1]+'</a>').join("")+'</nav><div class="prose">'+
+  '<section id="docs-what"><h2>What Ombro is</h2><p>A launchpad and trading site for coins paired with Monero. Every coin is a real pump.fun coin whose quote asset is wXMR, Monero bridged to Solana. You can pay from a Monero wallet and be paid back to one, or use Phantom or Solflare like any Solana app.</p><p>Holder rewards are paid in XMR. Part of every trade buys and burns $OMBRO, and part goes into one shared $OMBRO/wXMR pool whose LP tokens are burned, so nobody can pull that liquidity.</p></section>'+
+  '<section id="docs-stages"><h2>Stages</h2><div class="stagegrid"><div><span class="stage pending">Pending</span><b>Just launched</b><span class="muted">Fewer than 10 buys.</span></div><div><span class="stage ringing">On the curve</span><b>Climbing</b><span class="muted">Buys move it up pump.fun\'s bonding curve.</span></div><div><span class="stage confirmed">Graduated</span><b>Own pool</b><span class="muted">The curve completed and liquidity moved to a PumpSwap pool.</span></div></div><p class="muted">The fee split is the same at every stage.</p></section>'+
+  '<section id="docs-fees"><h2>Where the 2% goes</h2><p>Every trade pays a 2% creator fee. The coin\'s creator on pump.fun is a program address, so the fee from every trade lands in Ombro\'s program, whichever site or bot made the trade. The program splits it on chain:</p>'+feeSplit({pays:"creator"})+
+  '<ul><li><b>0.50% liquidity.</b> Added to $OMBRO/wXMR. The LP tokens are burned in the same transaction.</li><li><b>0.50% burn.</b> Buys $OMBRO and burns it.</li><li><b>0.20% Ombro.</b> Pays for the keeper, the indexer and the people running the site.</li><li><b>0.80% creator\'s choice.</b> To the creator, another wallet, a Monero address, holders, or the Monero General Fund. Only the current payee can redirect it. Holders and the General Fund are permanent.</li></ul><p class="muted">pump.fun charges its own protocol fee on top. None of it reaches Ombro.</p></section>'+
+  '<section id="docs-move"><h2>XMR in and out</h2><p>XMR moves between Monero and Solana through the wXMR bridge. Its terms, as published by the bridge: 0.1% each way, a minimum deposit of 0.1 XMR, and minting after 10 Monero confirmations, about 20 minutes.</p><ul><li><b>Paying in.</b> Each order gets its own one-time Monero subaddress and an exact amount. Send that amount before the time shown.</li><li><b>Getting paid.</b> Sales and rewards can go to any Monero address. On Monero, that payout is private.</li><li><b>What stays public.</b> Everything on Solana: the coin, your Ombro account, every trade and the bridge\'s mint and burn.</li></ul></section>'+
+  '<section id="docs-account"><h2>Monero wallet accounts</h2><p>No Solana wallet needed. Your first payment creates an Ombro account on Solana that only your passkey controls. A program checks every buy and sale against the limits you approved and refuses anything else.</p><ul><li>Export the account\'s key at any time and use it in any Solana wallet.</li><li>Add a backup passkey on a second device.</li><li>Launching from a Monero wallet uses a fresh account for that coin, so nothing links the launch to your other activity on Ombro.</li></ul></section>'+
+  '<section id="docs-keys"><h2>Who holds the keys</h2><p>The vault program splits fees and holds the liquidity pot. Only the liquidity wallet can draw from the pot, in bounded amounts, and each draw adds liquidity and burns the LP in the same transaction. The program can be upgraded only by a 2-of-3 multisig. Every address is listed on <a href="#proofs">Proofs</a>.</p></section>'+
+  '<section id="docs-risks"><h2>Risks</h2><ul><li><b>Coins can go to zero.</b> The shared liquidity backs no single coin.</li><li><b>Bridge risk.</b> wXMR is worth what the bridge holds. It is run by its own team, outside Ombro. If it is paused or fails, wXMR can lose value or become hard to redeem.</li><li><b>pump.fun dependency.</b> pump.fun can change fees or stop accepting wXMR as a pair.</li><li><b>Smart-contract risk.</b> Funds pass through Ombro\'s programs, pump.fun, PumpSwap, Jupiter and the bridge. Any of them can have a bug.</li><li><b>Not advice.</b> Nothing here is financial, legal or tax advice. Check the rules where you live.</li></ul></section>'+
+  '</div></div>';
+}
+
+/* router */
+const app=document.getElementById("app");
+function clearTimers(){S.timers.forEach(clearInterval);S.timers=[]}
+function route(){
+  clearTimers();
+  const h=(location.hash||"#coins").slice(1);
+  let r=h, coin=null;
+  if(h.startsWith("coin-")){coin=byId(parseInt(h.slice(5),10));r=coin?"coin":"coins"}
+  else if(h.startsWith("docs-"))r="docs";
+  else if(!["coins","launch","proofs","docs"].includes(h))r="coins";
+  document.querySelectorAll("[data-nav]").forEach(a=>{if(a.dataset.nav===(r==="coin"?"coins":r))a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(r==="coin"){S.cur=coin;if(S.lastCoin!==coin.id){S.trade.paying=false;S.tab="trades";S.lastCoin=coin.id}app.innerHTML=vCoin(coin);drawChart(coin);drawQR();if(S.trade.paying)startCountdown()}
+  else if(r==="launch"){app.innerHTML=vLaunch();updateCount()}
+  else if(r==="proofs")app.innerHTML=vProofs();
+  else if(r==="docs"){app.innerHTML=vDocs();if(h.startsWith("docs-")){const t=document.getElementById(h);if(t)t.scrollIntoView()}}
+  else app.innerHTML=vCoins();
+  S.route=r;
+  if(!h.startsWith("docs-"))window.scrollTo(0,0);
+}
+function rerenderTrade(){const b=document.getElementById("tradeBox");if(b&&S.cur){const f=document.activeElement&&document.activeElement.id;const pos=f==="amt"?document.activeElement.selectionStart:null;b.innerHTML=tradeBox(S.cur);drawQR();if(f){const e=document.getElementById(f);if(e){e.focus();if(pos!=null)try{e.setSelectionRange(pos,pos)}catch(_){}}}}}
+function rerenderLaunchSide(){const b=document.getElementById("launchSide");if(b)b.innerHTML=launchSide();const a=document.getElementById("lAva");if(a)a.innerHTML=launchAva()}
+function rerenderLaunch(){const f=document.activeElement&&document.activeElement.id;app.innerHTML=vLaunch();updateCount();if(f){const e=document.getElementById(f);if(e)e.focus()}}
+function updateCount(){const e=document.getElementById("lNameC");if(!e)return;const n=new TextEncoder().encode(S.launch.name).length;e.textContent=n+"/32 bytes";e.style.color=n>32?"var(--down)":""}
+function startCountdown(){S.timers.push(setInterval(()=>{const e=document.getElementById("cd");if(!e)return;const left=Math.max(0,4800-Math.floor((Date.now()-S.trade.t0)/1000));e.textContent=String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0")},1000))}
+
+/* events */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,[data-copy]");if(!t)return;
+  if(t.dataset.copy!=null){e.preventDefault();const txt=t.dataset.copy;const done=()=>{const o=t.innerHTML;t.textContent="Copied";setTimeout(()=>{t.innerHTML=o},1200)};
+    try{navigator.clipboard.writeText(txt).then(done,()=>{t.textContent=txt})}catch(_){done()}return}
+  if(t.dataset.filter){S.filter=t.dataset.filter;document.querySelectorAll("[data-filter]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.filter===S.filter));document.getElementById("exploreGrid").innerHTML=exploreGrid();return}
+  if(t.dataset.tf){S.tf=t.dataset.tf;document.querySelectorAll("[data-tf]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tf===S.tf));drawChart(S.cur);return}
+  if(t.dataset.tab){S.tab=t.dataset.tab;document.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===S.tab));
+    const r=mulberry(S.cur.id*31);const holders=[["Bonding curve",S.cur.stage==="confirmed"?0:62-S.cur.prog*55]];let left=100-holders[0][1];for(let i=0;i<7;i++){const v=+(left*(.12+r()*.2)).toFixed(2);left-=v;holders.push([fakeAddr(S.cur.id*50+i,44),v])}
+    document.getElementById("tabBody").innerHTML=tabBody(S.cur,holders);return}
+  if(t.dataset.side){S.trade.side=t.dataset.side;S.trade.amt=t.dataset.side==="buy"?"0.25":"1.2";S.trade.paying=false;clearTimers();rerenderTrade();return}
+  if(t.dataset.src){S.trade.src=t.dataset.src;S.trade.paying=false;clearTimers();if(S.trade.src==="xmr"&&S.trade.side==="buy"&&parseFloat(S.trade.amt)<.1)S.trade.amt="0.25";rerenderTrade();return}
+  if(t.dataset.amt){S.trade.amt=t.dataset.amt;S.trade.paying=false;rerenderTrade();return}
+  const act=t.dataset.act;
+  if(act==="buy"){if(S.trade.src==="xmr"){S.trade.paying=true;S.trade.t0=Date.now();rerenderTrade();startCountdown()}else{msg("Preview: a real buy would open Phantom or Solflare to approve.")}return}
+  if(act==="cancelpay"){S.trade.paying=false;clearTimers();rerenderTrade();return}
+  if(act==="sell"){if(S.trade.src==="xmr"&&!/^[48][1-9A-HJ-NP-Za-km-z]{94}$/.test(S.trade.recv.trim())){msg("Enter a full Monero address. It starts with 4 or 8 and is 95 characters long.");return}msg("Preview: a real sale would ask for your passkey or wallet approval.");return}
+  if(t.dataset.pair){S.launch.pair=t.dataset.pair;rerenderLaunch();return}
+  if(t.dataset.from){S.launch.from=t.dataset.from;S.launch.review=false;rerenderLaunch();return}
+  if(t.dataset.fixed){S.launch.fixed=t.dataset.fixed;rerenderLaunch();return}
+  if(act==="review"){S.launch.review=true;rerenderLaunchSide();return}
+  if(act==="unreview"){S.launch.review=false;rerenderLaunchSide();return}
+  if(t.id==="quietBtn"){S.quiet=!S.quiet;applyQuiet();route();return}
+});
+function msg(s){const m=document.getElementById("tradeMsg");if(m)m.textContent=s}
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="amt"){S.trade.amt=t.value.replace(/[^0-9.]/g,"");S.trade.paying=false;rerenderTrade();return}
+  if(t.id==="recv"){S.trade.recv=t.value;return}
+  if(t.id==="lName"){S.launch.name=t.value;S.launch.review=false;updateCount();rerenderLaunchSide();return}
+  if(t.id==="lTk"){const v=t.value.toUpperCase().replace(/[^A-Z0-9]/g,"");if(v!==t.value)t.value=v;S.launch.tk=v;S.launch.review=false;rerenderLaunchSide();return}
+  if(t.id==="lDesc"){S.launch.desc=t.value;return}
+  if(t.id==="lPayeeAddr"){S.launch.payeeAddr=t.value;return}
+  if(t.id==="lFirstAmt"){S.launch.firstAmt=t.value.replace(/[^0-9.]/g,"");rerenderLaunchSide();return}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="sortSel"){S.sort=t.value;document.getElementById("exploreGrid").innerHTML=exploreGrid();return}
+  if(t.name==="payee"){S.launch.payee=t.value;S.launch.review=false;rerenderLaunch();return}
+  if(t.id==="lFirst"){S.launch.first=t.checked;rerenderLaunch();return}
+  if(t.id==="lImg"&&t.files&&t.files[0]){const f=t.files[0];if(f.size>4194304){t.value="";return}const rd=new FileReader();rd.onload=()=>{S.launch.img=rd.result;rerenderLaunchSide()};rd.readAsDataURL(f)}
+});
+document.addEventListener("submit",e=>e.preventDefault());
+
+function applyQuiet(){document.documentElement.classList.toggle("quiet",S.quiet);const b=document.getElementById("quietBtn");b.setAttribute("aria-pressed",S.quiet);try{localStorage.setItem("ombro-quiet",S.quiet?"1":"0")}catch(e){}}
+
+/* live feed */
+seedTrades();
+const rnd=mulberry(99);
+setInterval(()=>{
+  S.trades.forEach(t=>t.ago+=3);const t=mkTrade(rnd,0);S.trades.unshift(t);S.trades=S.trades.slice(0,12);
+  const f=document.getElementById("feed");if(f)f.innerHTML=feedHTML(S.trades.slice(0,10),true);
+},3000);
+
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.route==="coin")drawChart(S.cur)},120)});
+if(window.matchMedia)window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.route==="coin")drawChart(S.cur)});
+new MutationObserver(()=>{if(S.route==="coin")drawChart(S.cur)}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+window.addEventListener("hashchange",route);
+applyQuiet();route();
+})();
+</script>
+</body>
+</html>
